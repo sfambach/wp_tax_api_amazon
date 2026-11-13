@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
 use TaxApiAmazon\Core\AmazonExportReader;
 
 /**
- * The owner's yearly export (synthetic sample in fixtures): one delivered proposal per order, no invented date, no picture address.
+ * The owner's yearly export (synthetic sample in fixtures): one delivered proposal per order, no invented date, the picture address with each line.
  */
 final class AmazonExportReaderTest extends TestCase
 {
@@ -35,8 +35,8 @@ final class AmazonExportReaderTest extends TestCase
         $order = (new AmazonExportReader())->read(self::files())[1]->toArray();
 
         self::assertSame([
-            ['title' => 'USB-C Kabel 1 m', 'quantity' => 1.0, 'unit_price' => '5.49', 'article_number' => 'B000000001'],
-            ['title' => 'Lötzinn 0,8 mm; 100 g', 'quantity' => 2.0, 'unit_price' => '3.5', 'article_number' => 'B000000002'],
+            ['title' => 'USB-C Kabel 1 m', 'quantity' => 1.0, 'unit_price' => '5.49', 'article_number' => 'B000000001', 'image_url' => 'https://example.invalid/i/1.jpg'],
+            ['title' => 'Lötzinn 0,8 mm; 100 g', 'quantity' => 2.0, 'unit_price' => '3.5', 'article_number' => 'B000000002', 'image_url' => 'https://example.invalid/i/2.jpg'],
         ], $order['lines']);
     }
 

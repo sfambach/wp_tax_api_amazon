@@ -16,7 +16,11 @@ use Taxmod\Core\Import\Mail\OrderMailParser;
  */
 final class Plugin
 {
-    public const VERSION = '0.0.2';
+    public const VERSION = '0.0.3';
+
+    /** The REST route an agent fills the queue through, with the files' text instead of an upload. */
+    public const ROUTE_NAMESPACE = 'taxapiamazon/v1';
+    public const ROUTE           = '/export';
     public const TAB     = 'amazon';
 
     /** The admin-post action and the id of its form, printed outside the Configuration page's own form. */
@@ -48,6 +52,7 @@ final class Plugin
 
             add_action('admin_post_' . self::UPLOAD, self::act(self::handleUpload(...)));
             add_action('admin_footer', self::uploadForm(...));
+            add_action('rest_api_init', self::registerRoute(...));
 
             $reader = new AmazonMailParser(self::VERSION);
             add_filter('taxmail_parsers', static fn (array $parsers): array => [...$parsers, $reader]);
@@ -157,26 +162,106 @@ final class Plugin
         }
 
         try {
-            $proposals = (new AmazonExportReader($since))->read($texts);
-        } catch (\InvalidArgumentException $failure) {
-            /* translators: %s: why */
-            self::refuse(sprintf(__('That is not the export: %s', 'taxapiamazon'), $failure->getMessage()));
-        }
-
-        $queue = self::QUEUE;
-
-        if (! $queue::store($proposals)) {
-            self::refuse(__('The orders could not be stored under wp-content.', 'taxapiamazon'));
+            $read = self::queue($texts, $since);
+        } catch (\InvalidArgumentException | \RuntimeException $failure) {
+            self::refuse($failure->getMessage());
         }
 
         set_transient(self::UPLOAD_DONE . get_current_user_id(), sprintf(
             /* translators: 1: orders, 2: items */
             __('%1$d orders with %2$d items read; each fetch of the mail import hands the next 100 to the inbox.', 'taxapiamazon'),
-            count($proposals),
-            array_sum(array_map(static fn ($proposal): int => count($proposal->lines), $proposals))
+            $read['orders'],
+            $read['items']
         ), 10 * MINUTE_IN_SECONDS);
         wp_safe_redirect(self::tabUrl());
         exit;
+    }
+
+    /**
+     * POST taxapiamazon/v1/export with `files` (the CSV texts) and optionally `since` («Y-m-d») and `fetch` (true: run the
+     * inbox's fetch right away, a slice of 100 per run, until the queue is handed on). The same as the upload, for an agent
+     * that holds the files but no browser (his word, 2026-11-13: «Ich dachte, du importierst einfach die CSV»).
+     */
+    public static function registerRoute(): void
+    {
+        register_rest_route(self::ROUTE_NAMESPACE, self::ROUTE, [
+            'methods'             => 'POST',
+            'permission_callback' => static fn (): bool => current_user_can(self::CAPABILITY),
+            'args'                => [
+                'files' => ['type' => 'array', 'items' => ['type' => 'string'], 'required' => true],
+                'since' => ['type' => 'string', 'pattern' => '^\\d{4}-\\d{2}-\\d{2}$'],
+                'fetch' => ['type' => 'boolean', 'default' => false],
+            ],
+            'callback'            => static function (\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+                if (! class_exists(self::QUEUE)) {
+                    return new \WP_Error('taxapiamazon_no_mail', __('Needs Taxmod Mail 0.6.0 or later: its fetch hands the orders to the inbox.', 'taxapiamazon'), ['status' => 409]);
+                }
+
+                $texts = array_values(array_filter(array_map('strval', (array) $request->get_param('files')), static fn (string $text): bool => $text !== ''));
+                $since = $request->get_param('since');
+
+                try {
+                    $read = self::queue($texts, is_string($since) && $since !== '' ? $since : null);
+                } catch (\InvalidArgumentException | \RuntimeException $failure) {
+                    return new \WP_Error('taxapiamazon_export', $failure->getMessage(), ['status' => 400]);
+                }
+
+                $read['filed'] = (bool) $request->get_param('fetch') ? self::fetch() : null;
+                $queue = self::QUEUE;
+
+                return new \WP_REST_Response($read + ['queue' => $queue::progress()]);
+            },
+        ]);
+    }
+
+    /**
+     * Reads the files into Taxmod Mail's export queue.
+     *
+     * @param list<string> $texts
+     * @return array{orders: int, items: int}
+     * @throws \InvalidArgumentException when a text is not a file of the export
+     * @throws \RuntimeException when the queue cannot be stored
+     */
+    private static function queue(array $texts, ?string $since): array
+    {
+        try {
+            $proposals = (new AmazonExportReader($since))->read($texts);
+        } catch (\InvalidArgumentException $failure) {
+            /* translators: %s: why */
+            throw new \InvalidArgumentException(sprintf(__('That is not the export: %s', 'taxapiamazon'), $failure->getMessage()), 0, $failure);
+        }
+
+        $queue = self::QUEUE;
+
+        if (! $queue::store($proposals)) {
+            throw new \RuntimeException(__('The orders could not be stored under wp-content.', 'taxapiamazon'));
+        }
+
+        return ['orders' => count($proposals), 'items' => array_sum(array_map(static fn ($proposal): int => count($proposal->lines), $proposals))];
+    }
+
+    /** The inbox's fetch, run until the queue is handed on — at most as many runs as slices of 100, plus one. */
+    private static function fetch(): int
+    {
+        if (! class_exists(\Taxmod\WordPress\Import\Inbox::class)) {
+            return 0;
+        }
+
+        $queue = self::QUEUE;
+        $inbox = new \Taxmod\WordPress\Import\Inbox();
+        $filed = 0;
+
+        for ($run = 0; $run < 20; $run++) {
+            $progress = $queue::progress();
+
+            if ($progress['handed'] >= $progress['total']) {
+                break;
+            }
+
+            $filed += $inbox->runAll();
+        }
+
+        return $filed;
     }
 
     /**

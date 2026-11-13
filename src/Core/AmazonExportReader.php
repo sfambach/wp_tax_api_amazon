@@ -11,8 +11,9 @@ use Taxmod\Core\Import\ProposalLine;
  * The owner's own Amazon export, one pair of files per year: «amazon_<year>_bestellungen.csv» (one row per order) and
  * «amazon_<year>_positionen.csv» (one row per technical item; the export already left out what is not material), read
  * into one proposal per order. The orders are delivered — the export has no status and no date of shipping or delivery,
- * so none is written (D-1350); the product picture's address is not handed on, the pictures come from the export's own
- * archive (architecture thread, 2026-11-13).
+ * so none is written (D-1350). The product picture's address from the export goes with each line; the inbox loads it
+ * into the media library once, only for what is taken (D-1079), as the owner asked: «Schließlich sind da ja auch Bilder»
+ * (2026-11-13).
  *
  * @see https://github.com/sfambach/wp-taxonomy-modeler/blob/main/docs/pakete/import/konzept.md
  */
@@ -93,7 +94,9 @@ final class AmazonExportReader
                 $unit = Money::format(intdiv($sum, $quantity));
             }
 
-            $lines[] = new ProposalLine(trim($item['Artikel']), (float) $quantity, $unit, self::given($item['ASIN']));
+            $picture = self::given($item['Bild-URL'] ?? '');
+            $lines[] = new ProposalLine(trim($item['Artikel']), (float) $quantity, $unit, self::given($item['ASIN']),
+                $picture !== null && str_starts_with($picture, 'https://') ? $picture : null);
         }
 
         return new OrderProposal(

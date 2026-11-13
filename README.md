@@ -2,7 +2,7 @@
 
 Amazon connection for the [Taxonomy Modeller](https://github.com/sfambach/wp-taxonomy-modeler) (WordPress plugin).
 
-**Status 0.0.2 (needs modeller 0.2.89 and [Taxmod Mail](https://github.com/sfambach/wp_tax_mail) 0.6.8 or later):
+**Status 0.0.3 (needs modeller 0.2.89 and [Taxmod Mail](https://github.com/sfambach/wp_tax_mail) 0.6.8 or later):
 reads order confirmations (several orders of one checkout), shipping, delivery and cancellation mails from the mailbox of Taxmod Mail and hands them to the modeller's inbox. The mails name no tracking number and no shipping cost.
 The orders from before the mails come from the owner's own export (one pair of CSV files per year), uploaded in this module's tab.**
 
@@ -16,13 +16,14 @@ The reader moved here from Taxmod Mail unchanged.
 2. Activate this module. *Taxonomy Modeller → Configuration → Amazon* shows under «Mail» which mails it reads.
 3. For older orders: in the same tab under «Order export», upload `amazon_<year>_positionen.csv` and `amazon_<year>_bestellungen.csv` (several years at once, optionally from a date).
    Each fetch of Taxmod Mail hands the next 100 orders to the inbox; an order the model already has is not proposed again.
+   Without a browser: `POST /wp-json/taxapiamazon/v1/export` with `files` (the CSV texts), optionally `since` and `fetch: true` (runs the inbox fetch until the queue is handed on). Only the columns the reader uses are needed.
 
 ## Order export
 
 - One proposal per order, platform «Amazon», the ASIN as article number, shipping and total from the order file.
 - The export has no status and no shipping or delivery date: the orders count as delivered, and no date is written for it (modeller D-1350).
 - Taking an order in the inbox is the confirmation; stock and goods receipt follow only from there.
-- The export's picture addresses are not handed on; product pictures come from the export's own archive, for internal use only.
+- Each line carries the export's picture address; the inbox loads it into the media library once, only for what is taken (modeller D-1079). Internal use only.
 
 ## Development
 
