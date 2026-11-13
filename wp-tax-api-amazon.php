@@ -2,8 +2,8 @@
 
 /**
  * Plugin Name:       Taxmod Amazon
- * Description:       Reads Amazon order mails from the mailbox of Taxmod Mail and hands them to the inbox of the Taxonomy Modeller.
- * Version:           0.0.1
+ * Description:       Reads Amazon order mails and the owner's own order export and hands them to the inbox of the Taxonomy Modeller.
+ * Version:           0.0.2
  * Requires at least: 6.9
  * Requires PHP:      8.2
  * Author:            Stefan Fambach (SteFam), Claude (Anthropic AI)
