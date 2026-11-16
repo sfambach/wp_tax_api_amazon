@@ -4,7 +4,7 @@ namespace TaxApiAmazon\WordPress;
 
 use TaxApiAmazon\Core\AmazonExportReader;
 use TaxApiAmazon\Core\AmazonMailParser;
-use Taxmod\Core\Import\Mail\OrderMailParser;
+use Taxmod\Core\Import\Mail\ShopMailParser;
 
 /**
  * The boundary: registers the Amazon mail reader with Taxmod Mail (filter `taxmail_parsers`) and a tab on the
@@ -16,7 +16,7 @@ use Taxmod\Core\Import\Mail\OrderMailParser;
  */
 final class Plugin
 {
-    public const VERSION = '0.0.3';
+    public const VERSION = '0.0.4';
 
     /** The REST route an agent fills the queue through, with the files' text instead of an upload. */
     public const ROUTE_NAMESPACE = 'taxapiamazon/v1';
@@ -42,10 +42,10 @@ final class Plugin
         add_action('plugins_loaded', static function (): void {
             load_plugin_textdomain('taxapiamazon', false, dirname(plugin_basename(dirname(__DIR__, 2) . '/wp-tax-api-amazon.php')) . '/languages');
 
-            // The contract lives in the modeller (0.1.81 or later); without it there is nothing to register with.
-            if (! interface_exists(OrderMailParser::class)) {
+            // The contract lives in the modeller (0.2.120 or later); without it there is nothing to register with.
+            if (! class_exists(ShopMailParser::class)) {
                 add_action('admin_notices', static fn () => print '<div class="notice notice-warning"><p><strong>Taxmod Amazon:</strong> '
-                    . esc_html__('needs the Taxonomy Modeller 0.1.81 or later and Taxmod Mail 0.6.0 or later.', 'taxapiamazon') . '</p></div>');
+                    . esc_html__('needs the Taxonomy Modeller 0.2.120 or later and Taxmod Mail 0.6.0 or later.', 'taxapiamazon') . '</p></div>');
 
                 return;
             }

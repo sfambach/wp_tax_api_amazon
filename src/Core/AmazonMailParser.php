@@ -5,6 +5,7 @@ namespace TaxApiAmazon\Core;
 use Taxmod\Core\Import\Mail\MailMessage;
 use Taxmod\Core\Import\Mail\LineCollector;
 use Taxmod\Core\Import\Mail\MultiOrderMailParser;
+use Taxmod\Core\Import\Mail\ShopMailParser;
 use Taxmod\Core\Import\Mail\Text;
 use Taxmod\Core\Import\OrderProposal;
 use Taxmod\Core\Import\ProposalKind;
@@ -18,22 +19,14 @@ use Taxmod\Core\Import\ProposalKind;
  *
  * @see https://github.com/sfambach/wp-taxonomy-modeler/blob/main/docs/pakete/import/module-schnitt.md
  */
-final class AmazonMailParser implements MultiOrderMailParser
+final class AmazonMailParser extends ShopMailParser implements MultiOrderMailParser
 {
-    public function __construct(private readonly string $version)
-    {
-    }
 
     private const ORDER_NUMBER = '/^Bestellnr\.\s*\W*(\d{3}-\d{7}-\d{7})/u';
 
-    public function key(): string
+    public function __construct(string $version)
     {
-        return 'amazon';
-    }
-
-    public function shopName(): string
-    {
-        return 'Amazon';
+        parent::__construct('amazon', 'Amazon', [ProposalKind::Ordered, ProposalKind::Shipped, ProposalKind::Delivered, ProposalKind::Cancelled], [], $version);
     }
 
     public function recognises(MailMessage $mail): bool
@@ -180,13 +173,4 @@ final class AmazonMailParser implements MultiOrderMailParser
         return $lines === [] ? null : Text::decimal($cents / 100);
     }
 
-    public function kinds(): array
-    {
-        return [ProposalKind::Ordered, ProposalKind::Shipped, ProposalKind::Delivered, ProposalKind::Cancelled];
-    }
-
-    public function version(): string
-    {
-        return $this->version;
-    }
 }

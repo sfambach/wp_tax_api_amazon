@@ -2,7 +2,7 @@
 
 Amazon connection for the [Taxonomy Modeller](https://github.com/sfambach/wp-taxonomy-modeler) (WordPress plugin).
 
-**Status 0.0.3 (needs modeller 0.2.89 and [Taxmod Mail](https://github.com/sfambach/wp_tax_mail) 0.6.8 or later):
+**Status 0.0.4 (needs modeller 0.2.120 and [Taxmod Mail](https://github.com/sfambach/wp_tax_mail) 0.6.8 or later):
 reads order confirmations (several orders of one checkout), shipping, delivery and cancellation mails from the mailbox of Taxmod Mail and hands them to the modeller's inbox. The mails name no tracking number and no shipping cost.
 The orders from before the mails come from the owner's own export (one pair of CSV files per year), uploaded in this module's tab.**
 
