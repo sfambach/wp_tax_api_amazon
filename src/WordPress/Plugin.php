@@ -2,6 +2,7 @@
 
 namespace TaxApiAmazon\WordPress;
 
+use Taxmod\WordPress\Admin\ListPage;
 use TaxApiAmazon\Core\AmazonExportReader;
 use TaxApiAmazon\Core\AmazonMailParser;
 use Taxmod\Core\Import\Mail\ShopMailParser;
@@ -50,7 +51,7 @@ final class Plugin
                 return;
             }
 
-            add_action('admin_post_' . self::UPLOAD, self::act(self::handleUpload(...)));
+            add_action('admin_post_' . self::UPLOAD, ListPage::acting(self::handleUpload(...), self::tabUrl()));
             add_action('admin_footer', self::uploadForm(...));
             add_action('rest_api_init', self::registerRoute(...));
 
@@ -299,31 +300,11 @@ final class Plugin
      * The handler as an act (D-1254): an exception becomes a message on the tab with the way back, never an empty page.
      * ListPage is named only here, inside the handler, so the boot does not compile it (D-1244).
      */
-    private static function act(\Closure $handler): \Closure
-    {
-        return static function () use ($handler): void {
-            if (! method_exists(\Taxmod\WordPress\Admin\ListPage::class, 'act')) {
-                $handler();
-
-                return;
-            }
-
-            \Taxmod\WordPress\Admin\ListPage::act(static function () use ($handler): string {
-                $handler();
-
-                return '';
-            }, self::tabUrl());
-        };
-    }
 
     /** A refusal as a message on the tab instead of a bare error page (D-1254). */
     private static function refuse(string $message): never
     {
-        if (method_exists(\Taxmod\WordPress\Admin\ListPage::class, 'fail')) {
-            \Taxmod\WordPress\Admin\ListPage::fail($message, self::tabUrl());
-        }
-
-        wp_die(esc_html($message), '', ['response' => 403, 'back_link' => true]);
+        ListPage::fail($message, self::tabUrl());
     }
 
     private static function tabUrl(): string
