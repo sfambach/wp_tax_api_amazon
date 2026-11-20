@@ -18,7 +18,7 @@ use Taxmod\Core\Import\Mail\ShopMailParser;
  */
 final class Plugin
 {
-    public const VERSION = '0.0.7';
+    public const VERSION = '0.0.8';
 
     /** The REST route an agent fills the queue through, with the files' text instead of an upload. */
     public const ROUTE_NAMESPACE = 'taxapiamazon/v1';
@@ -40,12 +40,12 @@ final class Plugin
     private const QUEUE = 'TaxMail\\WordPress\\ExportQueue';
 
     /**
-     * Whether the modeller is 0.2.173 or later (D-1409, D-1415) — asked by version, not by loading its classes: method_exists() on
+     * Whether the modeller is 0.2.174 or later (D-1409, D-1415) — asked by version, not by loading its classes: method_exists() on
      * ListPage compiled the 67 KB list page on every page view (D-1187; review 2026-11-17, Befund 6).
      */
     private static function modellerFits(): bool
     {
-        return class_exists(\Taxmod\WordPress\Plugin::class, false) && version_compare(\Taxmod\WordPress\Plugin::VERSION, '0.2.173', '>=');
+        return class_exists(\Taxmod\WordPress\Plugin::class, false) && version_compare(\Taxmod\WordPress\Plugin::VERSION, '0.2.174', '>=');
     }
 
     public static function boot(): void
@@ -53,10 +53,10 @@ final class Plugin
         add_action('plugins_loaded', static function (): void {
             load_plugin_textdomain('taxapiamazon', false, dirname(plugin_basename(dirname(__DIR__, 2) . '/wp-tax-api-amazon.php')) . '/languages');
 
-            // The contract and ListPage::acting live in the modeller (0.2.173 or later); without it there is nothing to register with.
+            // The contract and ListPage::acting live in the modeller (0.2.174 or later); without it there is nothing to register with.
             if (! self::modellerFits()) {
                 add_action('admin_notices', static fn () => print '<div class="notice notice-warning"><p><strong>Taxmod Amazon:</strong> '
-                    . esc_html__('needs the Taxonomy Modeller 0.2.173 or later and Taxmod Mail 0.6.0 or later.', 'taxapiamazon') . '</p></div>');
+                    . esc_html__('needs the Taxonomy Modeller 0.2.174 or later and Taxmod Mail 0.6.0 or later.', 'taxapiamazon') . '</p></div>');
 
                 return;
             }

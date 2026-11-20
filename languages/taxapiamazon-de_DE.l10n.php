@@ -25,7 +25,7 @@ return [
         'The orders from before the mails: upload the files «amazon_<year>_positionen.csv» and «amazon_<year>_bestellungen.csv» of your export, several at once. Each fetch of the mail import hands the next 100 orders to the inbox; an order the model has already is not proposed again. Taking an order in the inbox is the confirmation — stock and goods receipt follow only from there. The export has no shipping or delivery date, so none is written.' => 'Die Bestellungen von vor den Mails: die Dateien «amazon_<year>_positionen.csv» und «amazon_<year>_bestellungen.csv» Ihres Exports hochladen, mehrere auf einmal. Jeder Abruf des Mail-Imports gibt die nächsten 100 Bestellungen in den Eingang; eine Bestellung, die das Modell schon hat, wird nicht erneut vorgeschlagen. Das Übernehmen im Eingang ist die Bestätigung — Lager und Wareneingang folgen erst von dort. Der Export hat kein Versand- oder Lieferdatum, daher wird keins geschrieben.',
         'You may not import orders.'                                                     => 'Sie dürfen keine Bestellungen importieren.',
         'needs the Taxonomy Modeller 0.1.81 or later and Taxmod Mail 0.6.0 or later.'    => 'braucht den Taxonomy Modeller 0.1.81 und Taxmod Mail 0.6.0 oder neuer.',
-        'needs the Taxonomy Modeller 0.2.173 or later and Taxmod Mail 0.6.0 or later.'   => 'braucht den Taxonomy Modeller ab 0.2.173 und Taxmod Mail ab 0.6.0.',
+        'needs the Taxonomy Modeller 0.2.174 or later and Taxmod Mail 0.6.0 or later.'   => 'braucht den Taxonomy Modeller ab 0.2.174 und Taxmod Mail ab 0.6.0.',
         'run "composer install" in the plugin folder — the autoloader is missing.'       => 'im Plugin-Ordner «composer install» ausführen — der Autoloader fehlt.',
     ],
 ];
