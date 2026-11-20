@@ -2,6 +2,7 @@
 
 namespace TaxApiAmazon\WordPress;
 
+use Taxmod\Core\Description\InputKind;
 use Taxmod\WordPress\Admin\ListPage;
 use TaxApiAmazon\Core\AmazonExportReader;
 use TaxApiAmazon\Core\AmazonMailParser;
@@ -39,12 +40,12 @@ final class Plugin
     private const QUEUE = 'TaxMail\\WordPress\\ExportQueue';
 
     /**
-     * Whether the modeller is 0.2.123 or later (D-1409, D-1415) — asked by version, not by loading its classes: method_exists() on
+     * Whether the modeller is 0.2.173 or later (D-1409, D-1415) — asked by version, not by loading its classes: method_exists() on
      * ListPage compiled the 67 KB list page on every page view (D-1187; review 2026-11-17, Befund 6).
      */
     private static function modellerFits(): bool
     {
-        return class_exists(\Taxmod\WordPress\Plugin::class, false) && version_compare(\Taxmod\WordPress\Plugin::VERSION, '0.2.123', '>=');
+        return class_exists(\Taxmod\WordPress\Plugin::class, false) && version_compare(\Taxmod\WordPress\Plugin::VERSION, '0.2.173', '>=');
     }
 
     public static function boot(): void
@@ -52,10 +53,10 @@ final class Plugin
         add_action('plugins_loaded', static function (): void {
             load_plugin_textdomain('taxapiamazon', false, dirname(plugin_basename(dirname(__DIR__, 2) . '/wp-tax-api-amazon.php')) . '/languages');
 
-            // The contract and ListPage::acting live in the modeller (0.2.123 or later); without it there is nothing to register with.
+            // The contract and ListPage::acting live in the modeller (0.2.173 or later); without it there is nothing to register with.
             if (! self::modellerFits()) {
                 add_action('admin_notices', static fn () => print '<div class="notice notice-warning"><p><strong>Taxmod Amazon:</strong> '
-                    . esc_html__('needs the Taxonomy Modeller 0.2.123 or later and Taxmod Mail 0.6.0 or later.', 'taxapiamazon') . '</p></div>');
+                    . esc_html__('needs the Taxonomy Modeller 0.2.173 or later and Taxmod Mail 0.6.0 or later.', 'taxapiamazon') . '</p></div>');
 
                 return;
             }
@@ -110,9 +111,9 @@ final class Plugin
         return $html . '<p><button type="submit" class="button button-secondary" form="' . $form . '">' . esc_html__('Read the files', 'taxapiamazon') . '</button></p>'
             . '<table class="form-table" role="presentation">'
             . '<tr><th scope="row"><label for="taxapiamazon-export-files">' . esc_html__('Files', 'taxapiamazon') . '</label></th>'
-            . '<td><input type="file" id="taxapiamazon-export-files" name="export[]" multiple accept=".csv,text/csv" form="' . $form . '"></td></tr>'
+            . '<td>' . ListPage::field(InputKind::Upload, 'export[]', '', ['id' => 'taxapiamazon-export-files', 'form' => self::UPLOAD, 'note' => '.csv,text/csv']) . '</td></tr>'
             . '<tr><th scope="row"><label for="taxapiamazon-export-since">' . esc_html__('Ordered from', 'taxapiamazon') . '</label></th>'
-            . '<td><input type="date" id="taxapiamazon-export-since" name="since" form="' . $form . '"> '
+            . '<td>' . ListPage::field(InputKind::Moment, 'since', '', ['id' => 'taxapiamazon-export-since', 'form' => self::UPLOAD, 'note' => 'date']) . ' '
             . '<span class="description">' . esc_html__('Empty: every year.', 'taxapiamazon') . '</span></td></tr></table>';
     }
 
