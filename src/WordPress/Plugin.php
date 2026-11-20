@@ -17,7 +17,7 @@ use Taxmod\Core\Import\Mail\ShopMailParser;
  */
 final class Plugin
 {
-    public const VERSION = '0.0.6';
+    public const VERSION = '0.0.7';
 
     /** The REST route an agent fills the queue through, with the files' text instead of an upload. */
     public const ROUTE_NAMESPACE = 'taxapiamazon/v1';
